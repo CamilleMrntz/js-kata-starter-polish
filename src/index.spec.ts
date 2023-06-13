@@ -56,6 +56,15 @@ test("Should create a new array of 2 numbers and give and operator", () => {
   expect(operationToDo.arr).toEqual(["6", "-"]);
 });
 
+test("Should be negate and not -number", () => {
+  // given
+  const arr: any[] = ["1", "-1", "+"];
+  // when
+  // const result = arrayToLittleArray(arr);
+  // then
+  expect(() => arrayToLittleArray(arr)).toThrowError('Les chiffres négatifs ne sont pas acceptés');
+})
+
 test("Should remove 4 elements of the array if negate == true", () => {
     // given
     const bigArray: any[] = ["1", "4", "NEGATE", "+", "6", "-"];

@@ -16,31 +16,34 @@ export function stringToArray(str: string) {
 
 
 export function arrayToLittleArray(arr: string[]) {
-  const stack: number[] = [];
-  var operator: string = '';
-  var elementToRemove: number = 0;
-  let numberOfElementsToRemove: number = 0;
-  let negate: boolean = false;
-
-  for (var i: number = 1; i < arr.length; i++) {
-    if (arr[i] in operators) {
-      stack.push(parseInt(arr[i-2]));
-      stack.push(parseInt(arr[i-1]));
-      if (arr[i] == 'NEGATE') {
-        operator = arr[i+1];
-        numberOfElementsToRemove= 4;
-        negate = true;
-      } else {
-        operator = arr[i];
-        numberOfElementsToRemove = 3;
+    const stack: number[] = [];
+    var operator: string = '';
+    var elementToRemove: number = 0;
+    let numberOfElementsToRemove: number = 0;
+    let negate: boolean = false;
+  
+    for (var i: number = 1; i < arr.length; i++) {
+      if (arr[i] in operators) {
+        if (parseInt(arr[i-1])<0 || parseInt(arr[i-2])<0) {
+          throw new Error('Les chiffres négatifs ne sont pas acceptés');
+        }
+        stack.push(parseInt(arr[i-2]));
+        stack.push(parseInt(arr[i-1]));
+        if (arr[i] == 'NEGATE') {
+          operator = arr[i+1];
+          numberOfElementsToRemove= 4;
+          negate = true;
+        } else {
+          operator = arr[i];
+          numberOfElementsToRemove = 3;
+        }
+        elementToRemove = i - 2;
+        arr.splice(elementToRemove, numberOfElementsToRemove);
+        break;
       }
-      elementToRemove = i - 2;
-      arr.splice(elementToRemove, numberOfElementsToRemove);
-      break;
     }
+    return { stack, operator, arr, elementToRemove, negate };
   }
-  return { stack, operator, arr, elementToRemove, negate };
-}
 
 
 export function calcul(arr: number[], operator: string, negate: boolean) {
