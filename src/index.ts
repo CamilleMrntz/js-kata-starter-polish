@@ -1,82 +1,124 @@
 import { object } from "fast-check";
 
 const operators: Record<string, Function> = {
-  '+': (a, b) => a + b,
-  '-': (a, b) => a - b,
-  '*': (a, b) => a * b,
-  '/': (a, b) => a / b,
+  "+": (a, b) => a + b,
+  "-": (a, b) => a - b,
+  "*": (a, b) => a * b,
+  "/": (a, b) => a / b,
   MOD: (a, b) => a % b,
-  NEGATE: (a) => -a,
 };
 
-
+// Transform the expression given to an array of string
 export function stringToArray(str: string) {
-  return str.split(' ');
+  if (str.match(/^[A-Za-z]/)) {
+    throw new Error("Ce doit être un nombre");
+  } else {
+    return str.split(" ");
+  }
+}
+
+// Create a little array with the numbers to operate with
+// take those numbers out of the big array
+export function arrayToLittleArray(arr: string[]) {
+  const stack: number[] = [];
+  var operator: string = "";
+  var elementToRemove: number = 0;
+  let numberOfElementsToRemove: number = 0;
+
+  for (var i: number = 1; i < arr.length; i++) {
+    if (arr[i] in operators) {
+      if (parseInt(arr[i - 1]) < 0 || parseInt(arr[i - 2]) < 0) {
+        throw new Error("Les chiffres négatifs ne sont pas acceptés");
+      }
+
+      operator = arr[i];
+
+      if (arr[i - 1] == "NEGATE" && arr[i - 3] == "NEGATE") {
+        elementToRemove = i - 4;
+        numberOfElementsToRemove = 5;
+        stack.push(-parseInt(arr[i - 4]));
+        stack.push(-parseInt(arr[i - 2]));
+      } else if (arr[i - 1] == "NEGATE" && arr[i - 3] != "NEGATE") {
+        elementToRemove = i - 3;
+        numberOfElementsToRemove = 4;
+        stack.push(parseInt(arr[i - 3]));
+        stack.push(-parseInt(arr[i - 2]));
+      } else if (arr[i - 2] == "NEGATE") {
+        elementToRemove = i - 3;
+        numberOfElementsToRemove = 4;
+        stack.push(-parseInt(arr[i - 3]));
+        stack.push(parseInt(arr[i - 1]));
+      } else {
+        elementToRemove = i - 2;
+        numberOfElementsToRemove = 3;
+        stack.push(parseInt(arr[i - 2]));
+        stack.push(parseInt(arr[i - 1]));
+      }
+
+      arr.splice(elementToRemove, numberOfElementsToRemove);
+      break;
+    }
+  }
+  return { stack, operator, arr, elementToRemove };
+}
+
+// Do the little calcul
+export function calcul(arr: number[], operator: string) {
+  let resultToPush: number = 0;
+  var result: string[] = [];
+  if (operator in operators) {
+    if (operator === "/") {
+      if (arr[1] === 0) {
+        throw new Error("Division par zero");
+      }
+    }
+    resultToPush = operators[operator](arr[0], arr[1]);
+    result.push(Math.abs(resultToPush).toString());
+    if (resultToPush < 0) {
+      result.push("NEGATE");
+    }
+  } else {
+    throw new Error("Operateur non pris en charge");
+  }
+
+  return result;
 }
 
 
-export function arrayToLittleArray(arr: string[]) {
-    const stack: number[] = [];
-    var operator: string = '';
-    var elementToRemove: number = 0;
-    let numberOfElementsToRemove: number = 0;
-    let negate: boolean = false;
-  
-    for (var i: number = 1; i < arr.length; i++) {
-      if (arr[i] in operators) {
-        if (parseInt(arr[i-1])<0 || parseInt(arr[i-2])<0) {
-          throw new Error('Les chiffres négatifs ne sont pas acceptés');
-        }
-        stack.push(parseInt(arr[i-2]));
-        stack.push(parseInt(arr[i-1]));
-        if (arr[i] == 'NEGATE') {
-          operator = arr[i+1];
-          numberOfElementsToRemove= 4;
-          negate = true;
-        } else {
-          operator = arr[i];
-          numberOfElementsToRemove = 3;
-        }
-        elementToRemove = i - 2;
-        arr.splice(elementToRemove, numberOfElementsToRemove);
-        break;
-      }
-    }
-    return { stack, operator, arr, elementToRemove, negate };
+// Put the result of the little calcul inside of the big array
+export function insertNewNumber(bigArray: string[], newNumber: string[], placeOfTheNewNumber: number) {
+  bigArray.splice(placeOfTheNewNumber, 0, newNumber[0].toString());
+  if (newNumber[1] == "NEGATE") {
+    bigArray.splice(placeOfTheNewNumber + 1, 0, newNumber[1].toString());
   }
-
-
-export function calcul(arr: number[], operator: string, negate: boolean) {
-  var result: number = 0;
-  if (operator in operators) {
-    if (negate) {
-        arr[1] = -arr[1];
-    }
-    if (operator === '/') {
-        if (arr[1] === 0) {
-            throw new Error('Division par zero');
-        }
-    }
-    result = operators[operator](arr[0], arr[1]);
-  } else {
-    return "Operateur non pris en charge";
-  }
-  return result;
-};
-
-
-export function insertNewNumber(bigArray: string[], newNumber: number, placeOfTheNewNumber: number) {
-  bigArray.splice(placeOfTheNewNumber, 0, newNumber.toString());
   return bigArray;
-};
+}
 
-
-export function superFonctionQuiFaitLeCalcul(str: string) {
+// Operate the full calcul
+export function expressionToCalculate(str: string) {
+  let finalResult = 0;
   var bigArray: string[] = stringToArray(str);
-  while(bigArray.length > 1) {
-    var operationToDo = arrayToLittleArray(bigArray);
-    var result: any = calcul(operationToDo.stack, operationToDo.operator, operationToDo.negate);
-    bigArray = insertNewNumber(operationToDo.arr, result, operationToDo.elementToRemove);
+
+  if (bigArray.length == 2) {
+    finalResult = -parseInt(bigArray[0]);
+    return finalResult;
   }
-  return parseInt(bigArray[0]);
-};
+
+  while (bigArray.length > 2) {
+    if (bigArray.length == 2) {
+      finalResult = -parseInt(bigArray[0]);
+      return finalResult;
+    }
+    var operationToDo = arrayToLittleArray(bigArray);
+    var result: any[] = calcul(operationToDo.stack, operationToDo.operator);
+    bigArray = insertNewNumber(operationToDo.arr, result, operationToDo.elementToRemove);
+    if (bigArray.length == 2) {
+      finalResult = -parseInt(bigArray[0]);
+      return finalResult;
+    }
+  }
+
+  finalResult = parseInt(bigArray[0]);
+
+  return finalResult;
+}
