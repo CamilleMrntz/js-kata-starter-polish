@@ -19,25 +19,36 @@ export function arrayToLittleArray(arr: string[]) {
   const stack: number[] = [];
   var operator: string = '';
   var elementToRemove: number = 0;
+  let numberOfElementsToRemove: number = 0;
+  let negate: boolean = false;
 
   for (var i: number = 1; i < arr.length; i++) {
     if (arr[i] in operators) {
       stack.push(parseInt(arr[i-2]));
       stack.push(parseInt(arr[i-1]));
-      operator = arr[i];
+      if (arr[i] == 'NEGATE') {
+        operator = arr[i+1];
+        numberOfElementsToRemove= 4;
+        negate = true;
+      } else {
+        operator = arr[i];
+        numberOfElementsToRemove = 3;
+      }
       elementToRemove = i - 2;
-      const numberOfElementsToRemove: number = 3;
       arr.splice(elementToRemove, numberOfElementsToRemove);
       break;
     }
   }
-  return { stack, operator, arr, elementToRemove };
+  return { stack, operator, arr, elementToRemove, negate };
 }
 
 
-export function calcul(arr: number[], operator: string) {
+export function calcul(arr: number[], operator: string, negate: boolean) {
   var result: number = 0;
   if (operator in operators) {
+    if (negate) {
+        arr[1] = -arr[1];
+    }
     result = operators[operator](arr[0], arr[1]);
   } else {
     return "Operateur non pris en charge";
@@ -52,13 +63,11 @@ export function insertNewNumber(bigArray: string[], newNumber: number, placeOfTh
 };
 
 
-
-
 export function superFonctionQuiFaitLeCalcul(str: string) {
   var bigArray: string[] = stringToArray(str);
   while(bigArray.length > 1) {
     var operationToDo = arrayToLittleArray(bigArray);
-    var result: any = calcul(operationToDo.stack, operationToDo.operator);
+    var result: any = calcul(operationToDo.stack, operationToDo.operator, operationToDo.negate);
     bigArray = insertNewNumber(operationToDo.arr, result, operationToDo.elementToRemove);
   }
   return parseInt(bigArray[0]);
