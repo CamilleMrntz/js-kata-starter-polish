@@ -49,6 +49,11 @@ export function calcul(arr: number[], operator: string, negate: boolean) {
     if (negate) {
         arr[1] = -arr[1];
     }
+    if (operator === '/') {
+        if (arr[1] === 0) {
+            throw new Error('Division par zero');
+        }
+    }
     result = operators[operator](arr[0], arr[1]);
   } else {
     return "Operateur non pris en charge";

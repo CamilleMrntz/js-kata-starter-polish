@@ -101,6 +101,13 @@ test("Should give an error when operator is not in operators", () => {
   expect(result).toEqual("Operateur non pris en charge");
 });
 
+test("Should throw an error for division by zero", () => {
+
+  const str: string = "1 0 /";
+
+  expect(() => superFonctionQuiFaitLeCalcul(str)).toThrowError('Division par zero');
+});
+
 test("Should replace the used characters of the big array with the new number", () => {
   // given
   const newNumber: number = 5;
