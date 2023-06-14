@@ -19,13 +19,13 @@ export function stringToArray(str: string) {
 
 // Create a little array with the numbers to operate with
 // take those numbers out of the big array
-export function arrayToLittleArray(arr: string[]) {
+export function isolateOneOperation(arr: string[]) {
   const stack: number[] = [];
-  var operator: string = "";
-  var elementToRemove: number = 0;
+  let operator: string = "";
+  let elementToRemove: number = 0;
   let numberOfElementsToRemove: number = 0;
 
-  for (var i: number = 1; i < arr.length; i++) {
+  for (let i: number = 1; i < arr.length; i++) {
     if (arr[i] in operators) {
       if (parseInt(arr[i - 1]) < 0 || parseInt(arr[i - 2]) < 0) {
         throw new Error("Les chiffres négatifs ne sont pas acceptés");
@@ -65,7 +65,7 @@ export function arrayToLittleArray(arr: string[]) {
 // Do the little calcul
 export function calcul(arr: number[], operator: string) {
   let resultToPush: number = 0;
-  var result: string[] = [];
+  let result: string[] = [];
   if (operator in operators) {
     if (operator === "/") {
       if (arr[1] === 0) {
@@ -84,7 +84,6 @@ export function calcul(arr: number[], operator: string) {
   return result;
 }
 
-
 // Put the result of the little calcul inside of the big array
 export function insertNewNumber(bigArray: string[], newNumber: string[], placeOfTheNewNumber: number) {
   bigArray.splice(placeOfTheNewNumber, 0, newNumber[0].toString());
@@ -97,7 +96,7 @@ export function insertNewNumber(bigArray: string[], newNumber: string[], placeOf
 // Operate the full calcul
 export function expressionToCalculate(str: string) {
   let finalResult = 0;
-  var bigArray: string[] = stringToArray(str);
+  let bigArray: string[] = stringToArray(str);
 
   if (bigArray.length == 2) {
     finalResult = -parseInt(bigArray[0]);
@@ -105,12 +104,8 @@ export function expressionToCalculate(str: string) {
   }
 
   while (bigArray.length > 2) {
-    if (bigArray.length == 2) {
-      finalResult = -parseInt(bigArray[0]);
-      return finalResult;
-    }
-    var operationToDo = arrayToLittleArray(bigArray);
-    var result: any[] = calcul(operationToDo.stack, operationToDo.operator);
+    let operationToDo = isolateOneOperation(bigArray);
+    let result: any[] = calcul(operationToDo.stack, operationToDo.operator);
     bigArray = insertNewNumber(operationToDo.arr, result, operationToDo.elementToRemove);
     if (bigArray.length == 2) {
       finalResult = -parseInt(bigArray[0]);

@@ -1,7 +1,7 @@
 // @ts-ignore see https://github.com/jest-community/jest-extended#setup
 import * as matchers from "jest-extended";
 import fc from "fast-check";
-import { stringToArray, arrayToLittleArray, calcul, insertNewNumber, expressionToCalculate } from ".";
+import { stringToArray, isolateOneOperation, calcul, insertNewNumber, expressionToCalculate } from ".";
 
 expect.extend(matchers);
 
@@ -32,9 +32,7 @@ test("Property-based testing (fast-check)", () => {
   );
 });
 
-
 //////////////////////// tests on stringToArray() //////////////////////////
-
 
 test("Should transform string to array", () => {
   // given
@@ -52,15 +50,13 @@ test("Should be a number", () => {
   expect(() => stringToArray(str)).toThrowError("Ce doit être un nombre");
 });
 
-
 //////////////////////// tests on arrayToLittleArray() //////////////////////////
-
 
 test("Should create a new array of 2 numbers and give and operator", () => {
   // given
   const bigArray: any[] = ["1", "4", "+", "6", "-"];
   // when
-  const operationToDo = arrayToLittleArray(bigArray);
+  const operationToDo = isolateOneOperation(bigArray);
   // then
   expect(operationToDo.stack).toEqual([1, 4]);
   expect(operationToDo.operator).toEqual("+");
@@ -71,7 +67,7 @@ test("Should create a new array of 2 numbers and give and operator", () => {
   // given
   const bigArray: any[] = ["1", "4", "+", "6", "-"];
   // when
-  const operationToDo = arrayToLittleArray(bigArray);
+  const operationToDo = isolateOneOperation(bigArray);
   // then
   expect(operationToDo.stack).toEqual([1, 4]);
   expect(operationToDo.operator).toEqual("+");
@@ -82,14 +78,14 @@ test("Should be negate and not -number", () => {
   // given
   const arr: any[] = ["1", "-1", "+"];
   // then
-  expect(() => arrayToLittleArray(arr)).toThrowError("Les chiffres négatifs ne sont pas acceptés");
+  expect(() => isolateOneOperation(arr)).toThrowError("Les chiffres négatifs ne sont pas acceptés");
 });
 
 test("Should handle NEGATE well", () => {
   // given
   const bigArray: any[] = ["1", "NEGATE", "8", "NEGATE", "+", "6", "+"];
   // when
-  const operationToDo = arrayToLittleArray(bigArray);
+  const operationToDo = isolateOneOperation(bigArray);
   // then
   expect(operationToDo.stack).toEqual([-1, -8]);
   expect(operationToDo.operator).toEqual("+");
@@ -100,7 +96,7 @@ test("Should handle NEGATE well", () => {
   // given
   const bigArray: any[] = ["1", "8", "NEGATE", "+", "6", "+"];
   // when
-  const operationToDo = arrayToLittleArray(bigArray);
+  const operationToDo = isolateOneOperation(bigArray);
   // then
   expect(operationToDo.stack).toEqual([1, -8]);
   expect(operationToDo.operator).toEqual("+");
@@ -111,7 +107,7 @@ test("Should handle NEGATE well", () => {
   // given
   const bigArray: any[] = ["1", "NEGATE", "8", "+", "6", "+"];
   // when
-  const operationToDo = arrayToLittleArray(bigArray);
+  const operationToDo = isolateOneOperation(bigArray);
   // then
   expect(operationToDo.stack).toEqual([-1, 8]);
   expect(operationToDo.operator).toEqual("+");
@@ -122,7 +118,7 @@ test("Should remove 5 elements of the array if the 2 numbers are NEGATE", () => 
   // given
   const bigArray: any[] = ["1", "NEGATE", "4", "NEGATE", "+", "6", "-"];
   // when
-  const operationToDo = arrayToLittleArray(bigArray);
+  const operationToDo = isolateOneOperation(bigArray);
   // then
   expect(operationToDo.stack).toEqual([-1, -4]);
   // expect(operationToDo.negate).toEqual(true);
@@ -130,15 +126,12 @@ test("Should remove 5 elements of the array if the 2 numbers are NEGATE", () => 
   expect(operationToDo.arr).toEqual(["6", "-"]);
 });
 
-
 //////////////////////// tests on calcul() //////////////////////////
-
 
 test("Should do the operation", () => {
   // given
   const arr: number[] = [1, 4];
   const operator = "+";
-  // let negate: boolean = false;
   // when
   const result: any = calcul(arr, operator);
   // then
@@ -163,9 +156,7 @@ test("Should give an error when operator is not in operators", () => {
   expect(() => calcul(arr, operator)).toThrowError("Operateur non pris en charge");
 });
 
-
 //////////////////////// tests on expressionToCalculate() //////////////////////////
-
 
 test("Should throw an error for division by zero", () => {
   // given
@@ -185,53 +176,14 @@ test("Should replace the used characters of the big array with the new number", 
   expect(newArray).toEqual(["5", "6", "-"]);
 });
 
-
-
 //////////////////////// tests full calcul //////////////////////////
 
-
-
 test("Should do an entire calcul", () => {
-  // given
-  const str: string = "1 4 + 4 -";
-  // when
-  const result: number = expressionToCalculate(str);
-  // then
-  expect(result).toEqual(1);
-});
-
-test("Should do an other entire calcul", () => {
-  // given
-  const str: string = "1 1 1 - + 1 /";
-  // when
-  const result: number = expressionToCalculate(str);
-  // then
-  expect(result).toEqual(1);
-});
-
-test("Should do an other entire calcul", () => {
-  // given
-  const str: string = "8 1 NEGATE + 5 -";
-  // when
-  const result: number = expressionToCalculate(str);
-  // then
-  expect(result).toEqual(2);
-});
-
-test("Should do an other entire calcul", () => {
-  // given
-  const str: string = "1 NEGATE";
-  // when
-  const result: number = expressionToCalculate(str);
-  // then
-  expect(result).toEqual(-1);
-});
-
-test("Should do an other entire calcul", () => {
-  // given
-  const str: string = "8 1 NEGATE * 5 -";
-  // when
-  const result: number = expressionToCalculate(str);
-  // then
-  expect(result).toEqual(-13);
+  expect(expressionToCalculate("1 4 + 4 -")).toEqual(1);
+  expect(expressionToCalculate("1 1 1 - + 1 /")).toEqual(1);
+  expect(expressionToCalculate("3 5 8 * 7 + *")).toEqual(141);
+  expect(expressionToCalculate("8 1 NEGATE + 5 -")).toEqual(2);
+  expect(expressionToCalculate("1 NEGATE")).toEqual(-1);
+  expect(expressionToCalculate("8 1 NEGATE * 5 -")).toEqual(-13);
+  expect(expressionToCalculate("8 1 MOD")).toEqual(0);
 });
